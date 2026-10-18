@@ -47240,9 +47240,24 @@ const firstView = () => show('gate');
 if (hadLocal) firstView(); else show('loading');
 setSaved('Saved on this device');
 (async () => {
-  try { await boot(); } finally { if (view === 'loading') firstView(); }
+  try { await boot(); } finally { if (view === 'loading') firstView(); openEraHash(); }   // …#IV opens Era IV's tree on load
 })();
 async function boot() {}           // no accounts, no remote sync: everything stays on this device
+/* ---- era deep links: mathera.world/#I … #VII (any case) or #1 … #7 open that era's tree page, on load and on hashchange.
+   Same rules as an era tile: a learner who has never started any era gets that era's start picker, otherwise its world tree.
+   Holiday hashes (#halloween …) stay theme previews; anything else is ignored. */
+function eraFromHash(raw) {
+  let h = String(raw || '').replace(/^#/, ''); try { h = decodeURIComponent(h); } catch (e) { return null; }
+  h = h.trim(); if (!h || EVENTS.some(e => e[0] === h)) return null;
+  if (/^[1-7]$/.test(h)) return WORLD_KEYS[+h - 1];
+  const k = h.toUpperCase(); return WORLD_KEYS.includes(k) ? k : null;
+}
+function openEraHash() {
+  const k = eraFromHash(location.hash); if (!k || !ERAS[k]) return;
+  if (view === 'practice') leavePractice();
+  openWorld(k);
+}
+window.addEventListener('hashchange', openEraHash);
 
 applyPalette();
 /* ================= 0.6.3 Basic view: Era › Root › Thread, then the Field Trips =================
